@@ -1,0 +1,11 @@
+clear all
+close all
+clc
+
+pngFiles = dir('*.png');
+for k = 1:length(pngFiles)
+  filename = pngFiles(k).name;
+  data1 = imread(filename);
+   I = imread(data1);
+   I=imresize(I,0.6);
+end 
