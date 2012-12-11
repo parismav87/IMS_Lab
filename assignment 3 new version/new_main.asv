@@ -1,0 +1,87 @@
+clear all
+close all
+clc
+
+%read target image
+pngFiles = dir('C:\Users\Sakis\Documents\MATLAB\multimedia systems\Assignment 2/frames/*.png');
+filename = pngFiles(1).name;
+I = imread(filename);
+I = im2double(I);
+%crop target
+imshow(I);
+target_rec = getrect();
+target_x = round(target_rec(1));
+target_y = round(target_rec(2));
+target_width = round(target_rec(3));
+target_height = round(target_rec(4));
+
+%check if width or height is odd and add 1 if so
+if (mod(target_width,2) ~= 0)
+    target_width = target_width+1;
+end
+
+if (mod(target_height,2) ~= 0)
+    target_height = target_height+1;
+end
+
+% %obtain the center of the target
+target_center_x = target_x + (target_width / 2);
+target_center_y = target_y + (target_height / 2);
+t_c = [target_center_x target_center_y];
+%obtain the target
+I_target = get_target(I, target_center_x, target_center_y, target_width, target_height);
+I_target_norm = rgb2normal_rgb(I_target);
+
+% draw a rectangle on the target current position
+rectangle('Position',target_rec);
+
+% get target coordinates on image
+% [coords] = get_coordinates2(target_center_x, target_center_y, target_width, target_height); 
+%kernel mask
+k_t = kernel_mask(target_width+1, target_height+1);
+%target histogramm
+[hist_target hist_map] = rghist(I_target_norm,16,k_t);
+
+target_rec = [target_center_x target_center_y target_width target_height];
+
+y0_coords = get_coordinates3(target_width, target_height); 
+
+for k = 2:length(pngFiles)
+    filename = pngFiles(k).name;
+    I = imread(filename);
+    I = im2double(I);
+    coef0=1;
+    coef1=0;
+    while (coef1<coef0)
+    I_canditate = get_target(I, target_center_x, target_center_y, target_width, target_height);
+    I_canditate_norm = rgb2normal_rgb(I_canditate);
+    [hist_canditate map_canditate] = rghist(I_canditate_norm,16,k_t);
+    coef0 = bhattacharyya(hist_target,hist_canditate);
+    weights = weight_extraction(hist_canditate, hist_target, map_canditate);
+    
+    [y1 y2] = new_position(weights,y0_coords);
+
+    y=[y1 y2];
+    y = [target_center_x target_center_y]+y;
+    
+    I_canditate1 = get_target(I, y(1), y(2),target_width, target_height);
+    [hist_canditate1 map_canditate1] = rghist(I_canditate1,16,k_t);
+    coef1 = bhattacharyya(hist_target,hist_canditate1);
+    
+    if (abs(y-[target_center_target_center_y))
+       break; 
+    end
+    target_center_x = y(1);
+    target_center_y = y(2);
+    
+
+
+
+    end
+    target_rec = [y(1) y(2) target_width target_height];
+    imshow(I);
+    rectangle('Position',[y(1)-target_width/2,y(2)-target_height/(2),target_width,target_height])
+    
+    f(k)=getframe;
+end
+

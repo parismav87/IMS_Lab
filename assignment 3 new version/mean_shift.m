@@ -1,0 +1,48 @@
+function [y1 y2] = mean_shift(hist_target, q_rectangle, image_shift, kernel_mask)
+
+    % #1
+    % initialize the location of the target with y0 an evaluate the
+    % distance between the histograms
+    candidate_img_rgb = rgb2normal_rgb(image_shift); % convert to rgb
+  
+    y0_x = round(q_rectangle(1));
+    y0_y = round(q_rectangle(2));
+    y0_width = round(q_rectangle(3));
+    y0_height = round(q_rectangle(4));
+    
+    coef0=1;
+    coef1=0;
+    count = 0;
+    
+    y0_coords = get_coordinates3(y0_width, y0_height); 
+    
+    while (coef1<coef0)
+        I_canditate = get_target(candidate_img_rgb, y0_x, y0_y, y0_width, y0_height);
+        [hist_canditate map_canditate] = rghist(I_canditate,16,kernel_mask);
+        coef0 = bhattacharyya(hist_target,hist_canditate);
+        
+        % #2
+        % derive the weights according to 10
+        weights = weight_extraction(hist_canditate, hist_target, map_canditate);
+        
+         % #3
+        % find the next location of the target according to 11 (y1)
+        [y1 y2] = new_position(weights,y0_coords);
+        
+        y1 = round(y0_x+y1);
+        y2 = round(y0_y+y2);
+        
+        I_canditate = get_target(candidate_img_rgb, y1, y2, y0_width, y0_height);
+        [hist_canditate map_canditate] = rghist(I_canditate,16,kernel_mask);
+        
+         % #4
+        % compute the distance
+        coef1 = bhattacharyya(hist_target,hist_canditate);
+        
+      
+    end
+end
+    
+    
+    
+    
